@@ -1,0 +1,16 @@
+name: validate themes
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Validate all maps
+        run: python tools/validate_theme.py themes/*.mm demos/*.mm
