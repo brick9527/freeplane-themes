@@ -9,8 +9,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      - name: Validate all maps
+
+      - name: Validate every .mm
         run: python tools/validate_theme.py themes/*.mm demos/*.mm
+
+      - name: Demos match their themes
+        run: |
+          python tools/make_demo.py .
+          if ! git diff --quiet; then
+            echo "::error::demos/ is out of date - run 'python tools/make_demo.py .' and commit the result"
+            git diff --stat
+            exit 1
+          fi

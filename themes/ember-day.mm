@@ -47,7 +47,7 @@
 <icon BUILTIN="help"/>
 <font SIZE="12" BOLD="true"/>
 </stylenode>
-<stylenode TEXT="Done" COLOR="#94a3b8">
+<stylenode TEXT="Done" COLOR="#64748b">
 <font SIZE="12" STRIKETHROUGH="true"/>
 </stylenode>
 <stylenode TEXT="Quote" COLOR="#667085">

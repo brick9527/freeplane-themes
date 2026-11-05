@@ -58,8 +58,10 @@ Format → Manage Styles → Replace map styles by…     (replace everything)
 | xmind-classic | xmind-zen |
 | --- | --- |
 | ![classic](previews/xmind-classic-demo.png) | ![zen](previews/xmind-zen-demo.png) |
+| **ember-night** | **ember-day** |
+| ![ember-night](previews/ember-night-demo.png) | ![ember-day](previews/ember-day-demo.png) |
 
-Screenshots are real Freeplane 1.13.4 windows, not mock-ups.
+All four are real Freeplane 1.13.4 window captures; the source files live in `demos/` — just open them.
 
 ### The 8-card palette (xmind-classic)
 

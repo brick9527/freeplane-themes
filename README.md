@@ -56,8 +56,10 @@ Windows 安装版用户目录是 `%APPDATA%\Freeplane\<版本>\templates`，
 | xmind-classic | xmind-zen |
 | --- | --- |
 | ![classic](previews/xmind-classic-demo.png) | ![zen](previews/xmind-zen-demo.png) |
+| **ember-night** | **ember-day** |
+| ![ember-night](previews/ember-night-demo.png) | ![ember-day](previews/ember-day-demo.png) |
 
-截图都是在 Freeplane 1.13.4 里实际渲染的窗口，不是效果图。
+四张都是 Freeplane 1.13.4 实际渲染的窗口截图，对应的源文件在 `demos/` 下，双击即可打开。
 
 ### 8 个顺序色卡（xmind-classic）
 

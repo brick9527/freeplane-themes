@@ -52,10 +52,27 @@ TEXT_TREE = (
     ],
 )
 
+
+def ember_tree(colors):
+    blue, green, amber, violet, red = colors
+    return (
+        "季度回顾",
+        [
+            ("进展", blue, "Callout", [("上线 3 个版本", []), ("转化率 +18%", [])]),
+            ("问题", violet, "Quote", [("供应商延迟两周", [])]),
+            ("待办", amber, "Todo", [("复盘会议", []), ("更新路线图", [])]),
+            ("已完成", green, "Done", [("合同归档", []), ("招聘闭环", [])]),
+            ("重点", red, "styles.important", [("预算超支 12%", [])]),
+        ],
+    )
+
+
 DEMOS = {
-    # theme: (tree, style reference attribute, zoom)
-    "xmind-classic": (CARD_TREE, "STYLE_REF", "0.75"),
-    "xmind-zen": (TEXT_TREE, None, None),
+    # theme: (tree, zoom) - zoom only when the sample needs to fit one screenshot
+    "xmind-classic": (CARD_TREE, "0.75"),
+    "xmind-zen": (TEXT_TREE, None),
+    "ember-night": (ember_tree(("#8ab4f8", "#9be3a0", "#f9c74f", "#cba6f7", "#f78ca0")), None),
+    "ember-day": (ember_tree(("#4c6ef5", "#12b886", "#f59f00", "#9b51e0", "#e64980")), None),
 }
 
 
@@ -68,25 +85,25 @@ class Builder:
     def __init__(self) -> None:
         self.counter = 0
 
-    def node(self, name, color="", style=None, children=(), indent=1, attr="STYLE_REF") -> str:
+    def node(self, name, color="", style=None, children=(), indent=1) -> str:
         self.counter += 1
         attrs = f'TEXT="{esc(name)}"'
         if style:
             # translated keys go through LOCALIZED_STYLE_REF, literal names through STYLE_REF
-            key = "LOCALIZED_STYLE_REF" if style.startswith(("styles.", "AutomaticLayout.")) else attr
+            key = "LOCALIZED_STYLE_REF" if style.startswith(("styles.", "AutomaticLayout.")) else "STYLE_REF"
             attrs += f' {key}="{esc(style)}"'
         attrs += f' ID="ID_17{self.counter:08d}"'
         pad = "  " * indent
         body = f'<edge COLOR="{color}"/>' if color else ""
         for child_name, grandchildren in children:
-            body += self.node(child_name, color, None, grandchildren, indent + 1, attr)
+            body += self.node(child_name, color, None, grandchildren, indent + 1)
         if body:
             return f'{pad}<node {attrs}>{body}{pad}</node>\n'
         return f'{pad}<node {attrs}/>\n'
 
 
 def build(theme: str, root: Path) -> Path:
-    tree, attr, zoom = DEMOS[theme]
+    tree, zoom = DEMOS[theme]
     src = (root / "themes" / f"{theme}.mm").read_text(encoding="utf-8")
     match = re.search(r"<node\b[^>]*>", src)
     if not match:
@@ -103,7 +120,7 @@ def build(theme: str, root: Path) -> Path:
 
     builder = Builder()
     children = "".join(
-        builder.node(name, color, style, kids, attr=attr or "STYLE_REF")
+        builder.node(name, color, style, kids)
         for name, color, style, kids in tree[1]
     )
     out = src[:match.start(0)] + new_tag + "\n" + body + children + "</node>" + \
