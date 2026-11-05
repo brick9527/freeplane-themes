@@ -135,15 +135,26 @@ Older versions are untested.
 
 ## License
 
-**GPL-2.0** (SPDX: `GPL-2.0-only`), see [LICENSE](LICENSE). Same license as the Freeplane repository,
-so a pull request upstream needs no relicensing.
+Code and content are licensed separately:
 
-In short: use, modify and redistribute freely (commercial use included), but when you distribute a
-modified version it must stay under GPL-2.0 with the source available. Using it privately without
-distributing anything does not force you to publish.
+| Content | License | Text |
+| --- | --- | --- |
+| `tools/`, `.github/` | GPL-2.0 (SPDX: `GPL-2.0-only`) | [LICENSE](LICENSE) |
+| `themes/`, `demos/`, `previews/`, `docs/` | **CC BY 4.0** (or GPL-2.0, your choice) | [LICENSE-CC-BY-4.0.txt](LICENSE-CC-BY-4.0.txt) |
 
-Applying a theme to your own map does not change the license of that map — it is your content, the
-theme is only the source of the styles it references.
+**Why split it**: a theme is a data file, not a program. Putting GPL on data files makes people worry
+that their own maps become GPL, and GPL was not designed for that kind of content. So the themes, demo
+maps, screenshots and docs are **CC BY 4.0** — attribution is all it takes; commercial use, recolouring
+and shipping inside a closed-source template are all fine. If you prefer GPL, the same files may also be
+used under GPL-2.0.
 
-The palette is inspired by XMind's default themes (colour values are not copyrightable); the
-structure and attribute names come from Freeplane's open-source implementation.
+The code (validator, demo generator, CI) stays GPL-2.0, matching the Freeplane repository, so a pull
+request upstream needs no relicensing.
+
+**The only hard requirement of CC BY 4.0 is attribution**: keep a link back to this repository and
+`Copyright (c) 2026 FreePlaneTheme contributors`, and indicate whether changes were made.
+
+Applying a theme to your own map does not change the license of that map — it is your content.
+
+The palette is inspired by XMind's default themes (colour values are not copyrightable); the structure
+and attribute names come from Freeplane's open-source implementation.
