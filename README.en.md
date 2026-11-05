@@ -154,7 +154,7 @@ The code (validator, demo generator, CI) stays GPL-2.0, matching the Freeplane r
 request upstream needs no relicensing.
 
 **The only hard requirement of CC BY 4.0 is attribution**: keep a link back to this repository and
-`Copyright (c) 2026 FreePlaneTheme contributors`, and indicate whether changes were made.
+`Copyright (c) 2026 brick9527`, and indicate whether changes were made.
 
 Applying a theme to your own map does not change the license of that map — it is your content.
 

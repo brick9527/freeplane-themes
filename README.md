@@ -146,7 +146,7 @@ docs/       style-reference.md 格式速查
 代码（校验脚本、演示图生成脚本、CI）保持 GPL-2.0，和 Freeplane 主仓库一致，方便回提 PR。
 
 **CC BY 4.0 的唯一硬性要求是署名**：再分发时请保留出处（本仓库链接）和
-`Copyright (c) 2026 FreePlaneTheme contributors`，并注明是否做过修改。
+`Copyright (c) 2026 brick9527`，并注明是否做过修改。
 
 把主题套到你自己的导图上，不会改变导图内容的授权 —— 那是你的作品。
 
