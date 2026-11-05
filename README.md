@@ -1,5 +1,7 @@
 # Freeplane 脑图主题
 
+中文 · [English](README.en.md)
+
 A small collection of mind-map themes (style templates) for [Freeplane](https://www.freeplane.org),
 plus the bits needed to build and check your own.
 
@@ -128,5 +130,13 @@ docs/       style-reference.md 格式速查
 
 ## License
 
-MIT，见 [LICENSE](LICENSE)。主题配色参考了 XMind 的默认主题（颜色本身不构成版权内容），
-结构和属性名来自 Freeplane 的开源实现。
+**GPL-2.0**（SPDX：`GPL-2.0-only`），全文见 [LICENSE](LICENSE)。
+
+选它是因为和 Freeplane 主仓库同协议 —— 主题要提 PR 回上游时不用再做授权变更。
+
+简单说：你可以随便用、改、再分发（包括商用），但**分发时必须以 GPL-2.0 授权并附带源码**，
+不能把改动后的版本换成闭源协议。自己内部用不发布，则不受"必须开源"的约束。
+
+把主题套到你自己的导图上，不会改变导图内容的授权 —— 那是你的作品，主题只是被引用的样式来源。
+
+配色参考了 XMind 的默认主题（色值本身不构成版权内容），结构和属性名来自 Freeplane 的开源实现。
