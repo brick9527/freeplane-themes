@@ -247,7 +247,8 @@ def release_notes(
     themes = sorted((root / "themes").glob("*.mm"))
     theme_count = len(themes)
     commit_date = git(root, "log", "-1", "--format=%cs", tag)
-    commit = git(root, "rev-parse", "--short", tag)
+    # peel the tag: `rev-parse <tag>` would print the tag object for annotated tags
+    commit = git(root, "rev-parse", "--short", f"{tag}^{{commit}}")
 
     try:
         previous = git(root, "describe", "--tags", "--abbrev=0", f"{tag}^")
