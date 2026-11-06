@@ -141,6 +141,14 @@ icons live, how to add your own and how to rebuild the pack:
 > Icons are local only: send a map that uses Lucide icons to someone without the add-on and the
 > icons are missing there.
 
+**Icons stuck in the top-left corner of the label?** All four themes pin
+`show_icons="BESIDE_NODES"` in `<properties>`, so icons sit on the text baseline. If icons in a
+given map are stacked above the text (which reads as "top-left of the label"), that map carries
+`show_icons="ABOVE_NODES"` of its own — a value already written into the file is not overridden by
+the default. Re-apply the theme with `Format → Manage styles → Copy map styles…`; Freeplane copies
+map-level properties along with the styles. Values and the diagnosis:
+**[docs/style-reference.md](docs/style-reference.md#图标摆在文字旁还是上方)** (Chinese).
+
 ## Build your own
 
 A theme is a `.mm` file whose `<hook NAME="MapStyle">` contains a `<map_styles>` tree. The full

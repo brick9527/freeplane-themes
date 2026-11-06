@@ -4,7 +4,7 @@
 <hook NAME="accessories/plugins/AutomaticLayout.properties" VALUE="ALL"/>
 <font BOLD="true"/>
 <hook NAME="MapStyle" background="#fbfbfd">
-    <properties auto_compact_layout="true" show_icon_for_attributes="true" show_note_icons="true" fit_to_viewport="false" edgeColorConfiguration="#4c6ef5ff,#12b886ff,#f59f00ff,#9b51e0ff,#15aabfff,#e64980ff,#3b8ed0ff,#2f9e44ff,#e8a33dff,#ae3ec9ff,#0c8599ff,#d6336cff"/>
+    <properties auto_compact_layout="true" show_icon_for_attributes="true" show_note_icons="true" show_icons="BESIDE_NODES" fit_to_viewport="false" edgeColorConfiguration="#4c6ef5ff,#12b886ff,#f59f00ff,#9b51e0ff,#15aabfff,#e64980ff,#3b8ed0ff,#2f9e44ff,#e8a33dff,#ae3ec9ff,#0c8599ff,#d6336cff"/>
 
 <map_styles>
 <stylenode LOCALIZED_TEXT="styles.root_node" STYLE="oval" UNIFORM_SHAPE="true" VGAP_QUANTITY="26 pt">

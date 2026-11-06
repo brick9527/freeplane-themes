@@ -192,9 +192,33 @@ styles.root_node
 | `edgeColorConfiguration` | 自动边色调色板，逗号分隔，**每项 `#RRGGBBAA`**，官方模板给 12 色 |
 | `auto_compact_layout` | 自动紧凑布局 |
 | `show_note_icons` / `show_icon_for_attributes` | 便签/属性图标 |
-| `show_icons` | `ABOVE_NODES` `BESIDE_NODES` `HIDE` |
+| `show_icons` | 图标摆放：`BESIDE_NODES`（和文字同一行）`ABOVE_NODES`（堆在文字上方）`HIDE`。详见下面「图标摆在文字旁还是上方」 |
 | `fit_to_viewport` | 打开时自适应 |
 | `show_tags` / `showTagCategories` | 标签显示 |
+
+### 图标摆在文字旁还是上方
+
+`show_icons` 是**地图级属性**，不是样式属性 —— 写进 `<stylenode>` 里没有任何效果，只认 `<properties>`。
+
+它由 `MapStyle.iconLocation(map)` 读取（`org.freeplane.view.swing.map.IconLocation`，只有三个枚举值），
+底层是 `MapStyleModel.getEnumProperty("show_icons", BESIDE_NODES)`：**文件里没写时回落到 `BESIDE_NODES`**。
+
+| 值 | 渲染 | 典型现象 |
+| --- | --- | --- |
+| `BESIDE_NODES` | 图标在文字左侧，文字相对图标垂直居中 | 图标和文字在同一条基线上，XMind 那种排法 |
+| `ABOVE_NODES` | 图标排在文字上方一行（`MainView.setVerticalTextPosition(BOTTOM)`） | 图标看起来贴在节点/label 的**左上角**，文字被压到下一行 |
+| `HIDE` | 不画图标（数据还在，只是不显示） | 画布上完全看不到图标 |
+
+所以「加了图标却偏到 label 左上角」几乎一定是这张图自己带着 `show_icons="ABOVE_NODES"`：
+
+- 从别人的主题、官方模板、或早期版本沿用了这个属性；
+- 文件没写时 Freeplane 用默认 `BESIDE_NODES`，但**已经写进去的值不会被"默认值"覆盖**。
+
+本仓库四套主题都在 `<properties>` 里显式写了 `show_icons="BESIDE_NODES"`，免得渲染结果取决于
+用户所用模板的残留值。要让一张已有导图也跟着变，用 `格式 → 管理样式 → 复制导图样式…`：
+Freeplane 的 `StyleExchange` 会把源导图的**非样式属性**搬过来（只保留目标图自己的
+`edgeColorConfiguration`），`show_icons` 就在其中。改完 `tools/validate_theme.py` 会检查取值合法性，
+没写这个属性时给一条 warning。
 
 ---
 

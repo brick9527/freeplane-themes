@@ -132,6 +132,12 @@ Windows 安装版用户目录是 `%APPDATA%\Freeplane\<版本>\templates`，
 
 > 图标只在本机生效：把带 Lucide 图标的导图发给没装这个包的人，那边图标会缺。
 
+**图标跑到 label 左上角？** 四套主题都在 `<properties>` 里写死了 `show_icons="BESIDE_NODES"`，
+图标和文字在同一条基线上。如果某张图里图标堆在文字上方（看着像贴在节点的左上角），
+说明这张图自己带着 `show_icons="ABOVE_NODES"`（旧模板/别的主题留下的，文件里已写死的值不会被默认值覆盖）。
+用 `格式 → 管理样式 → 复制导图样式…` 从主题再套一次即可 —— Freeplane 复制样式时会一并搬地图级属性。
+取值含义和排查过程见 [docs/style-reference.md](docs/style-reference.md#图标摆在文字旁还是上方)。
+
 ## 自己做一个
 
 主题 = 一张 `.mm`，里面 `<hook NAME="MapStyle">` 下有 `<map_styles>` 样式树。

@@ -33,6 +33,8 @@ DASHES = {"SOLID", "CLOSE_DOTS", "DASHES", "DISTANT_DOTS", "DOTS_AND_DASHES"}
 # org.freeplane.features.cloud.CloudShape
 CLOUD_SHAPES = {"ARC", "STAR", "RECT", "ROUND_RECT"}
 TEXT_ALIGN = {"LEFT", "CENTER", "RIGHT", "DEFAULT"}
+# org.freeplane.view.swing.map.IconLocation - map property "show_icons"
+ICON_LOCATIONS = {"BESIDE_NODES", "ABOVE_NODES", "HIDE"}
 
 REQUIRED_PREDEFINED = [
     "default",
@@ -147,6 +149,20 @@ def validate(path: Path) -> tuple[list[str], list[str]]:
                         f"edgeColorConfiguration entry {c!r} has no alpha channel; "
                         "Freeplane writes #RRGGBBAA"
                     )
+
+        # map property show_icons: BESIDE_NODES keeps icons on the text baseline,
+        # ABOVE_NODES stacks them on top of the label - easy to mistake for a bug.
+        show_icons = props.get("show_icons")
+        if show_icons is None:
+            warnings.append(
+                "properties has no show_icons: Freeplane falls back to BESIDE_NODES, "
+                "but a map that carries its own ABOVE_NODES keeps icons above the label"
+            )
+        elif show_icons not in ICON_LOCATIONS:
+            fail(
+                errors,
+                f"show_icons={show_icons!r}, expected one of {', '.join(sorted(ICON_LOCATIONS))}",
+            )
 
     # --- <map_styles> ----------------------------------------------------
     map_styles = map_style.find("map_styles")

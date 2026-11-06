@@ -13,6 +13,10 @@ add-on 把 [Lucide](https://lucide.dev) 全套图标装进那个目录。**
 
 这也是为什么「换个主题图标跟着换」做不到：主题是纯数据，包里没有图片。
 
+> 图标**摆放位置**（和文字同一行 / 堆在文字上方）是另一回事，由地图级属性 `show_icons` 决定，
+> 主题的 `<properties>` 里可以写死。四套主题都写了 `BESIDE_NODES`；图标跑到 label 左上角怎么排查，
+> 见 [style-reference.md](style-reference.md#图标摆在文字旁还是上方)。
+
 ## 用户图标目录怎么工作
 
 读 `IconStoreFactory` 的源码确认，规则很朴素：
