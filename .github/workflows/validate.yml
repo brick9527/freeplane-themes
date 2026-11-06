@@ -2,6 +2,8 @@ name: validate themes
 
 on:
   push:
+    branches:
+      - "**"
     tags-ignore:
       - "*" # tags are handled by release.yml, which validates before it packages
   pull_request:
