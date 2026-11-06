@@ -133,9 +133,11 @@ Windows 安装版用户目录是 `%APPDATA%\Freeplane\<版本>\templates`，
 > 图标只在本机生效：把带 Lucide 图标的导图发给没装这个包的人，那边图标会缺。
 
 **图标跑到 label 左上角？** 四套主题都在 `<properties>` 里写死了 `show_icons="BESIDE_NODES"`，
-图标和文字在同一条基线上。如果某张图里图标堆在文字上方（看着像贴在节点的左上角），
-说明这张图自己带着 `show_icons="ABOVE_NODES"`（旧模板/别的主题留下的，文件里已写死的值不会被默认值覆盖）。
-用 `格式 → 管理样式 → 复制导图样式…` 从主题再套一次即可 —— Freeplane 复制样式时会一并搬地图级属性。
+图标和文字在同一行。真遇到图标贴在节点左上角，按顺序查三件事：① 用文本编辑器打开那张 `.mm` 搜
+`show_icons`，写着 `ABOVE_NODES` 才是这个属性作怪（旧模板/别的主题留下的，文件里已写死的值不会被默认值覆盖），
+用 `格式 → 管理样式 → 复制导图样式…` 从主题再套一次即可，Freeplane 复制样式时会一并搬地图级属性；② 写着
+`BESIDE_NODES` 的话，问题多半是「字号明显大于 `ICON_SIZE`」—— `BESIDE_NODES` 是顶端对齐而不是垂直居中，
+根节点 22 pt 配 14 pt 图标就会显高；③ 再考虑带 `STYLE="bubble"` 的形状节点叠加 `SHAPE_VERTICAL_MARGIN` 的观感。
 取值含义和排查过程见 [docs/style-reference.md](docs/style-reference.md#图标摆在文字旁还是上方)。
 
 ## 自己做一个

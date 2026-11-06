@@ -142,11 +142,15 @@ icons live, how to add your own and how to rebuild the pack:
 > icons are missing there.
 
 **Icons stuck in the top-left corner of the label?** All four themes pin
-`show_icons="BESIDE_NODES"` in `<properties>`, so icons sit on the text baseline. If icons in a
-given map are stacked above the text (which reads as "top-left of the label"), that map carries
-`show_icons="ABOVE_NODES"` of its own — a value already written into the file is not overridden by
-the default. Re-apply the theme with `Format → Manage styles → Copy map styles…`; Freeplane copies
-map-level properties along with the styles. Values and the diagnosis:
+`show_icons="BESIDE_NODES"` in `<properties>`, so icons stay on the text row. When icons do end up
+above the text, check three things in order: ① open the `.mm` in a text editor and search
+`show_icons` — `ABOVE_NODES` is the culprit (a leftover from an older template or another theme; a
+value already written into the file is not overridden by the default), and re-applying the theme with
+`Format → Manage styles → Copy map styles…` fixes it because Freeplane copies map-level properties
+along with the styles; ② if it already says `BESIDE_NODES`, the font is probably much larger than
+`ICON_SIZE` — `BESIDE_NODES` top-aligns the icon with the text row instead of centering it, so a 22 pt
+root label next to a 14 pt icon looks raised; ③ only then blame the combination of a
+`STYLE="bubble"` shape and its `SHAPE_VERTICAL_MARGIN`. Values and the full diagnosis:
 **[docs/style-reference.md](docs/style-reference.md#图标摆在文字旁还是上方)** (Chinese).
 
 ## Build your own

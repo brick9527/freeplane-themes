@@ -205,14 +205,24 @@ styles.root_node
 
 | 值 | 渲染 | 典型现象 |
 | --- | --- | --- |
-| `BESIDE_NODES` | 图标在文字左侧，文字相对图标垂直居中 | 图标和文字在同一条基线上，XMind 那种排法 |
-| `ABOVE_NODES` | 图标排在文字上方一行（`MainView.setVerticalTextPosition(BOTTOM)`） | 图标看起来贴在节点/label 的**左上角**，文字被压到下一行 |
+| `BESIDE_NODES` | 图标在文字左侧；`MainView.setVerticalTextPosition(TOP)`，**图标顶端对齐文字行顶端** | 图标和文字在同一行，XMind 那种排法；字号远大于图标时图标会显得偏高 |
+| `ABOVE_NODES` | `MainView.setVerticalTextPosition(BOTTOM)`，**文字底端对齐图标底端**，图标整体抬到文字上方 | 图标贴在节点/label 的**左上角**，文字被压到下一行 |
 | `HIDE` | 不画图标（数据还在，只是不显示） | 画布上完全看不到图标 |
 
-所以「加了图标却偏到 label 左上角」几乎一定是这张图自己带着 `show_icons="ABOVE_NODES"`：
+「加了图标却偏到 label 左上角」按下面三步查，不要一上来就怪 `show_icons`：
 
-- 从别人的主题、官方模板、或早期版本沿用了这个属性；
-- 文件没写时 Freeplane 用默认 `BESIDE_NODES`，但**已经写进去的值不会被"默认值"覆盖**。
+1. **看这张图自己的 `<properties>`**：用文本编辑器打开 `.mm` 搜 `show_icons`。写着 `ABOVE_NODES` 就是它，
+   换成 `BESIDE_NODES`（或直接重新套一次主题）即可；写着 `BESIDE_NODES` 则不是这个原因，继续往下。
+2. **看字号和图标尺寸**：`BESIDE_NODES` 是「顶端对齐」，不是垂直居中。某个层级的字号明显大于
+   样式里的 `ICON_SIZE` 时（例如根节点 22 pt 配 14 pt 图标），图标会被顶到文字行顶部，看起来就像
+   「跑到左上角」。给该层级单独写一个更大的 `ICON_SIZE`，或把字号调小，就能压回视觉中线。
+3. **看是不是带形状（`STYLE="bubble"`）的节点**：形状节点有 `SHAPE_VERTICAL_MARGIN`，文字在色块里居中，
+   图标仍按标签行顶对齐，叠加起来更容易显得"浮"在左上角。对这类节点，要么调 `ICON_SIZE`，
+   要么把这一层换成不带 `STYLE="bubble"` 的样式。
+
+文件里没写 `show_icons` 时 Freeplane 用默认 `BESIDE_NODES`（`MyXmlReader` 还会按首选项里的布尔 `show_icons`
+写死成 `BESIDE_NODES` 或 `HIDE`，**从不写 `ABOVE_NODES`**），所以只有从别处（别的主题、官方模板、早期版本）
+沿用了这个值，图里才会出现 `ABOVE_NODES`；**已经写进去的值不会被"默认值"覆盖**。
 
 本仓库四套主题都在 `<properties>` 里显式写了 `show_icons="BESIDE_NODES"`，免得渲染结果取决于
 用户所用模板的残留值。要让一张已有导图也跟着变，用 `格式 → 管理样式 → 复制导图样式…`：
