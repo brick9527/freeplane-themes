@@ -257,7 +257,9 @@ def render_map(
     lines: list[str] = []
     add = lines.append
     add('<?xml version="1.0" encoding="UTF-8"?>')
-    add('<map version="1.9.8">')
+    # same map format as themes/: the "freeplane " prefix tells the loader this is
+    # a Freeplane map, not a FreeMind one
+    add('<map version="freeplane 1.9.8">')
     add(
         f'<node TEXT="{xml_attr(titles["zh_CN"])}" FOLDED="false" '
         f'LINK="{xml_attr(meta["homepage"])}">'
