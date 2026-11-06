@@ -116,6 +116,18 @@ A theme cannot ship icons — a `.mm` only stores icon names. Beyond the set bun
 you can install this repo's **Lucide icon add-on**: 2029 SVGs filed under Lucide's 42 categories in
 `<userdir>/icons/lucide/`.
 
+Every icon comes from **[Lucide](https://lucide.dev)** — we do not draw them. Upstream repository:
+**[lucide-icons/lucide](https://github.com/lucide-icons/lucide)**; the build pins one commit
+(currently `b826f0c527e1498f5e46f41ca0277ccab144bf31`) and takes only the svgs under `icons/` plus
+the category json.
+
+| Item | Notes |
+| --- | --- |
+| Upstream | Lucide · https://lucide.dev · https://github.com/lucide-icons/lucide |
+| Licence | ISC (Copyright © Lucide Icons and Contributors); 115 icons derived from Feather are MIT |
+| Our changes | Syntax only, so Freeplane's kitfox renderer can draw them: path data fully separated, presentation attributes inlined with a literal colour. No shape was altered |
+| Full licence text | `addons/lucide-icons/LICENSE-lucide.txt` — this is what the installer's licence box shows |
+
 ```
 File → Open map…            pick lucide-icons-<version>.addon.mm
 Tools → Plugins → Add-on installer   → install → restart Freeplane

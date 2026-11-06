@@ -110,6 +110,17 @@ Windows 安装版用户目录是 `%APPDATA%\Freeplane\<版本>\templates`，
 主题本身带不了图标（`.mm` 里只存图标名字）。除了 Freeplane 内置那一套，还可以装本仓库的
 **Lucide 图标包**：2029 个 SVG，按 Lucide 的 42 个分类放进 `<用户目录>/icons/lucide/`。
 
+图标全部来自 **[Lucide](https://lucide.dev)**，不是我们画的。上游仓库：
+**[lucide-icons/lucide](https://github.com/lucide-icons/lucide)**；构建时 pin 到一个固定提交
+（当前 `b826f0c527e1498f5e46f41ca0277ccab144bf31`），只取 `icons/` 下的 svg 和分类 json。
+
+| 项 | 说明 |
+| --- | --- |
+| 上游项目 | Lucide · https://lucide.dev · https://github.com/lucide-icons/lucide |
+| 许可 | ISC（Copyright © Lucide Icons and Contributors）；其中 115 个源自 Feather 的图标为 MIT |
+| 我们的改动 | 仅改写法以便 Freeplane 的 kitfox 渲染器能画出来：路径全分隔、样式内联并写死颜色，图形本身未改 |
+| 许可全文 | `addons/lucide-icons/LICENSE-lucide.txt`，安装时的许可确认框显示的就是它 |
+
 ```
 文件 → 打开导图…          选中 lucide-icons-<版本>.addon.mm
 工具 → 插件 → 插件安装器   (Tools → Plugins → Add-on installer) → 安装 → 重启 Freeplane
