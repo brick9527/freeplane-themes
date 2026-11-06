@@ -9,6 +9,7 @@ same command runs locally:
 Output in ``--out`` (default ``dist/``):
 
     <theme>.mm                               one file per theme, ready for templates/
+    lucide-icons-<version>.addon.mm          the Lucide icon add-on (see addons/lucide-icons/)
     freeplane-themes-<version>-themes.zip    all themes + licence + attribution notice
     freeplane-themes-<version>-full.zip      whole project (themes, demos, previews, docs, tools)
     freeplane-themes-<version>-source.zip    git archive of the tag
@@ -34,6 +35,10 @@ import sys
 import zipfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from build_icon_addon import build_addon, check as check_addon  # noqa: E402  (needs the sys.path line above)
+
 # One line per theme in the release notes. A theme missing here still gets
 # packaged; it only shows up with the fallback description.
 THEME_DESCRIPTIONS = {
@@ -45,7 +50,7 @@ THEME_DESCRIPTIONS = {
 
 # copied into the top of the packaged folders
 TOP_LEVEL_FILES = ("README.md", "README.en.md", "LICENSE", "LICENSE-CC-BY-4.0.txt")
-CONTENT_DIRS = ("themes", "demos", "previews", "docs", "tools")
+CONTENT_DIRS = ("themes", "demos", "previews", "docs", "tools", "addons")
 
 SEMVER = re.compile(
     r"^(?P<core>"
@@ -192,6 +197,11 @@ def build(root: Path, out: Path, tag: str, notes_path: Path) -> tuple[str, bool]
         theme_entries[name] = (root / name).read_bytes()
     make_zip(out / f"{stamp}-themes.zip", theme_entries)
 
+    # --- Lucide icon add-on: built from addons/lucide-icons/ + pinned Lucide commit
+    addon = build_addon(root, out, version)
+    if check_addon(addon) != 0:
+        raise SystemExit(f"the icon add-on failed its self check: {addon}")
+
     # --- full.zip: the whole project, under a versioned folder -------------
     full_entries: dict[str, bytes] = {
         f"{stamp}/{relative}": path.read_bytes()
@@ -305,6 +315,25 @@ def release_notes(
     lines.append("已有导图想换风格：`格式 → 管理样式 → 替换导图样式为…`。")
     lines.append("")
 
+    lines.append("## 图标包 / Icons add-on")
+    lines.append("")
+    lines.append("`lucide-icons-*.addon.mm` 是独立的 add-on，把 [Lucide](https://lucide.dev) 全套矢量图标")
+    lines.append("装进 Freeplane 的用户图标目录（`icons/lucide/`），按 Lucide 的分类分成一个个子组。")
+    lines.append("")
+    lines.append("```")
+    lines.append("文件 → 打开导图…          选中 lucide-icons-*.addon.mm")
+    lines.append("工具 → 插件 → 插件安装器   (Tools → Plugins → Add-on installer) → 安装 → 重启")
+    lines.append("图标面板 → lucide 分组 → notifications / files / arrows / text …")
+    lines.append("```")
+    lines.append("")
+    lines.append("安装器读的是「当前打开那张导图」根节点上的 name / version / author / freeplaneVersionFrom，")
+    lines.append("所以要先把这个 `.addon.mm` 当普通导图打开，它不会自己弹文件选择框。")
+    lines.append("")
+    lines.append("图标名就是「lucide/分类/文件名」，样式或节点上写 `<icon BUILTIN=\"lucide/notifications/check\"/>`。")
+    lines.append("图标放在 `lucide/` 子目录，不覆盖任何内置图标；但它只在本机生效 ——")
+    lines.append("把带这些图标的导图发给没装 add-on 的人，图标会缺失。细节见 `docs/icons.md`。")
+    lines.append("")
+
     lines.append("## 变更 / Changes")
     lines.append("")
     if previous:
@@ -337,6 +366,10 @@ def release_notes(
         "再分发请保留仓库链接与 `Copyright (c) 2026 brick9527`，并注明是否修改。"
     )
     lines.append("`tools/`、`.github/` 按 **GPL-2.0-only** 授权。详见包内 `LICENSE` 与 `LICENSE-CC-BY-4.0.txt`。")
+    lines.append(
+        "图标 add-on 里的图标来自 Lucide，按 **ISC** 授权（部分源自 Feather 的按 MIT），"
+        "见 `addons/lucide-icons/LICENSE-lucide.txt`；打包脚本同样是 GPL-2.0。"
+    )
     lines.append("")
     if prerelease:
         lines.append("> 预发布版本：接口与文件名可能还会调整。")
@@ -349,6 +382,10 @@ def release_notes(
     lines.append(f"Freeplane mind-map themes, packaged for `{tag}` ({theme_count} themes).")
     lines.append("")
     lines.append("- `*.mm` — one file per theme; drop it into Freeplane's `templates/` folder.")
+    lines.append(
+        "- `lucide-icons-<version>.addon.mm` — Lucide icon add-on "
+        "(open it as a map, then Tools → Plugins → Add-on installer)."
+    )
     lines.append(f"- `-themes.zip` — all themes plus the licence and the attribution notice.")
     lines.append("- `-full.zip` — the whole project (themes, demos, previews, docs, tools).")
     lines.append("- `-source.zip` / `-source.tar.gz` — `git archive` of the tag.")
@@ -368,6 +405,8 @@ def release_notes(
 
 
 def describe_asset(name: str, version: str, theme_count: int) -> str:
+    if name.endswith(".addon.mm"):
+        return "Lucide 图标 add-on，装完图标面板里多出 `lucide` 分组"
     if name.endswith(".mm"):
         return "单套主题模板，放进 `templates\\` 即可用"
     if name.endswith("-themes.zip"):

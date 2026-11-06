@@ -51,6 +51,15 @@ jobs:
         with:
           python-version: "3.12"
 
+      # the icon add-on is built from the Lucide commit pinned in
+      # addons/lucide-icons/addon.json; cache it so later runs skip the download
+      - name: Cache Lucide sources
+        if: steps.check.outputs.is_release == 'true'
+        uses: actions/cache@v4
+        with:
+          path: .cache/lucide
+          key: lucide-${{ hashFiles('addons/lucide-icons/addon.json') }}
+
       - name: Is this a release tag?
         id: check
         run: |

@@ -21,6 +21,7 @@ Freeplane 的主题就是一个普通的 `.mm` 模板文件 —— 样式全在�
 | 拿什么 | 用在哪 |
 | --- | --- |
 | 单个 `*.mm` | 只想要某一套主题，下载后放进 `templates\` |
+| `lucide-icons-<版本>.addon.mm` | Lucide 图标包（2029 个图标），装完图标面板多出 `lucide` 分组 |
 | `freeplane-themes-<版本>-themes.zip` | 全部主题 + `NOTICE.txt` + 许可，扁平结构，解压后 `.mm` 直接落进 `templates\` |
 | `freeplane-themes-<版本>-full.zip` | 整个工程：主题 / 演示图 / 截图 / 文档 / 工具 / 许可 |
 | `freeplane-themes-<版本>-source.zip`、`-source.tar.gz` | 该 tag 的源码快照（含 CI 配置） |
@@ -104,6 +105,22 @@ Windows 安装版用户目录是 `%APPDATA%\Freeplane\<版本>\templates`，
 想达标就把底色压暗一档（同色相）：
 `#E8A33D → #BC7916`、`#6FAE5A → #5D974A`、`#DF684C → #DD6245`、`#2A9D8F → #28988B`、`#E06C9F → #DC5B93`。
 
+## 图标
+
+主题本身带不了图标（`.mm` 里只存图标名字）。除了 Freeplane 内置那一套，还可以装本仓库的
+**Lucide 图标包**：2029 个 SVG，按 Lucide 的 42 个分类放进 `<用户目录>/icons/lucide/`。
+
+```
+文件 → 打开导图…          选中 lucide-icons-<版本>.addon.mm
+工具 → 插件 → 插件安装器   (Tools → Plugins → Add-on installer) → 安装 → 重启 Freeplane
+```
+
+装完在图标面板的 `lucide` 分组里挑，引用写 `BUILTIN="lucide/notifications/circle-check"`。
+规则、常用图标的路径、怎么自己加图标、怎么重建这个包，都在
+**[docs/icons.md](docs/icons.md)**。
+
+> 图标只在本机生效：把带 Lucide 图标的导图发给没装这个包的人，那边图标会缺。
+
 ## 自己做一个
 
 主题 = 一张 `.mm`，里面 `<hook NAME="MapStyle">` 下有 `<map_styles>` 样式树。
@@ -131,8 +148,9 @@ python tools\make_demo.py .
 themes/     主题模板（.mm）
 demos/      带示例内容的演示图（.mm），双击即可看效果
 previews/   演示图的 Freeplane 真实截图（.png）
-tools/      validate_theme.py 校验 / make_demo.py 生成演示 / build_release.py 打包 / install_themes.ps1 安装
-docs/       style-reference.md 格式速查、releasing.md 发版说明
+addons/     图标 add-on 的源集（lucide-icons：元数据 + Lucide 许可全文）
+tools/      validate_theme.py 校验 / make_demo.py 生成演示 / build_release.py 打包 / build_icon_addon.py 打图标包 / install_themes.ps1 安装
+docs/       style-reference.md 格式速查、icons.md 图标、releasing.md 发版说明
 .github/    CI：validate.yml 每次提交校验、release.yml 打 tag 自动发版
 ```
 
@@ -144,8 +162,9 @@ git push origin v1.0.0
 ```
 
 推上去就完了：CI 先校验每套主题、确认 `demos/` 与 `themes/` 同步，再打包成
-各主题独立 `.mm`、`-themes.zip`、`-full.zip`、`-source.zip` / `-source.tar.gz` 和 `SHA256SUMS.txt`，
-最后创建 Release 并写好发布正文。同一个 tag 重跑是刷新附件而不是报错。
+各主题独立 `.mm`、`lucide-icons-<版本>.addon.mm`、`-themes.zip`、`-full.zip`、`-source.zip` /
+`-source.tar.gz` 和 `SHA256SUMS.txt`，最后创建 Release 并写好发布正文。
+同一个 tag 重跑是刷新附件而不是报错。
 细节（触发条件、附件清单、回滚）见 [docs/releasing.md](docs/releasing.md)。
 
 ## 已知限制
@@ -153,7 +172,8 @@ git push origin v1.0.0
 1. Freeplane 的**节点填充色不能跟随分支色**（只有边框的颜色/宽度/线型能跟随 `BORDER_*_LIKE_EDGE`），
    所以实心彩卡需要手动套样式 —— 这是比 XMind 多出来的唯一一步。
 2. 连线只有等宽曲线，没有 XMind 那种锥形渐细（tapered line）。
-3. 主题不携带图标/贴纸，只能用内置 `BUILTIN` 图标名。
+3. 主题不携带图标/贴纸，只能用 `BUILTIN` 图标名；想要更多图标就装 [Lucide 图标包](docs/icons.md)
+   （用户图标是文件、存在本机，别人没装就看不到）。
 4. 主题只影响 mind map 渲染，不影响编辑器 UI（那是 FlatLaf `.theme.json` 那层）。
 
 ## 兼容性
@@ -169,6 +189,7 @@ git push origin v1.0.0
 | --- | --- | --- |
 | `tools/`、`.github/` | GPL-2.0（SPDX：`GPL-2.0-only`） | [LICENSE](LICENSE) |
 | `themes/`、`demos/`、`previews/`、`docs/` | **CC BY 4.0**（也可按 GPL-2.0 使用，二选一） | [LICENSE-CC-BY-4.0.txt](LICENSE-CC-BY-4.0.txt) |
+| `addons/lucide-icons/`（图标本体） | **ISC**（部分源自 Feather 的图标为 MIT），版权归 Lucide | [LICENSE-lucide.txt](addons/lucide-icons/LICENSE-lucide.txt) |
 
 **为什么这样分**：主题是数据文件，不是程序。用 GPL 授权数据文件，会让不少人担心"套了主题我的导图是不是也被
 传染了"，而 GPL 本来也不是为这类内容设计的。所以主题、示例图、截图、文档默认走 **CC BY 4.0** —— 署名即可使用，

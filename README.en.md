@@ -22,6 +22,7 @@ No need to clone — grab a package from [Releases](https://github.com/brick9527
 | Take this | Use it for |
 | --- | --- |
 | a single `*.mm` | you only want one theme; drop it into `templates\` |
+| `lucide-icons-<version>.addon.mm` | Lucide icon pack (2029 icons); installs a `lucide` group into the icon panel |
 | `freeplane-themes-<version>-themes.zip` | all themes plus `NOTICE.txt` and the licences, flat layout — extract and the `.mm` files land in `templates\` |
 | `freeplane-themes-<version>-full.zip` | the whole project: themes / demos / previews / docs / tools / licences |
 | `freeplane-themes-<version>-source.zip`, `-source.tar.gz` | source snapshot of that tag (CI config included) |
@@ -109,6 +110,25 @@ branch 9 falls back to the first colour (`色卡1`), branch 10 to the second, an
 white text looks a little washed out. To fix it, darken those fills by one step (same hue):
 `#E8A33D → #BC7916`, `#6FAE5A → #5D974A`, `#DF684C → #DD6245`, `#2A9D8F → #28988B`, `#E06C9F → #DC5B93`.
 
+## Icons
+
+A theme cannot ship icons — a `.mm` only stores icon names. Beyond the set bundled with Freeplane
+you can install this repo's **Lucide icon add-on**: 2029 SVGs filed under Lucide's 42 categories in
+`<userdir>/icons/lucide/`.
+
+```
+File → Open map…            pick lucide-icons-<version>.addon.mm
+Tools → Plugins → Add-on installer   → install → restart Freeplane
+```
+
+Then pick from the `lucide` group in the icon panel and reference it as
+`BUILTIN="lucide/notifications/circle-check"`. How the user icon folder works, where the common
+icons live, how to add your own and how to rebuild the pack:
+**[docs/icons.md](docs/icons.md)** (Chinese, like the rest of `docs/`).
+
+> Icons are local only: send a map that uses Lucide icons to someone without the add-on and the
+> icons are missing there.
+
 ## Build your own
 
 A theme is a `.mm` file whose `<hook NAME="MapStyle">` contains a `<map_styles>` tree. The full
@@ -136,8 +156,9 @@ python tools\make_demo.py .
 themes/     theme templates (.mm)
 demos/      sample maps (.mm) that already use a theme — just open them
 previews/   real Freeplane screenshots (.png)
-tools/      validate_theme.py, make_demo.py, build_release.py, install_themes.ps1
-docs/       style-reference.md (format reference), releasing.md (how releases work)
+addons/     source of the icon add-on (lucide-icons: metadata + Lucide licence text)
+tools/      validate_theme.py, make_demo.py, build_release.py, build_icon_addon.py, install_themes.ps1
+docs/       style-reference.md (format reference), icons.md (icons), releasing.md (how releases work)
 .github/    CI: validate.yml on every push, release.yml publishes on a tag
 ```
 
@@ -149,8 +170,9 @@ git push origin v1.0.0
 ```
 
 That is the whole procedure: CI validates every theme, checks that `demos/` still matches
-`themes/`, packages one `.mm` per theme plus `-themes.zip`, `-full.zip`, `-source.zip` /
-`-source.tar.gz` and `SHA256SUMS.txt`, then creates the release with generated notes.
+`themes/`, packages one `.mm` per theme plus `lucide-icons-<version>.addon.mm`, `-themes.zip`,
+`-full.zip`, `-source.zip` / `-source.tar.gz` and `SHA256SUMS.txt`, then creates the release with
+generated notes.
 Re-running a tag refreshes the assets instead of failing. Details (triggers, asset list,
 rollback) are in [docs/releasing.md](docs/releasing.md).
 
@@ -160,7 +182,8 @@ rollback) are in [docs/releasing.md](docs/releasing.md).
    can follow the edge, via `BORDER_*_LIKE_EDGE`), so solid cards are applied by hand — that is the
    only extra step compared to XMind.
 2. Edges are always the same width; there is no tapered line.
-3. Themes cannot ship icons or stickers — only built-in `BUILTIN` icon names.
+3. Themes cannot ship icons or stickers — only `BUILTIN` icon names; for more, install the
+   [Lucide icon add-on](docs/icons.md) (user icons are local files, so people without it see nothing).
 4. Themes only affect the mind map rendering, not the editor UI (that is the FlatLaf `.theme.json` layer).
 
 ## Compatibility
@@ -176,6 +199,7 @@ Code and content are licensed separately:
 | --- | --- | --- |
 | `tools/`, `.github/` | GPL-2.0 (SPDX: `GPL-2.0-only`) | [LICENSE](LICENSE) |
 | `themes/`, `demos/`, `previews/`, `docs/` | **CC BY 4.0** (or GPL-2.0, your choice) | [LICENSE-CC-BY-4.0.txt](LICENSE-CC-BY-4.0.txt) |
+| `addons/lucide-icons/` (the icons themselves) | **ISC** (Feather-derived icons: MIT), © Lucide | [LICENSE-lucide.txt](addons/lucide-icons/LICENSE-lucide.txt) |
 
 **Why split it**: a theme is a data file, not a program. Putting GPL on data files makes people worry
 that their own maps become GPL, and GPL was not designed for that kind of content. So the themes, demo
