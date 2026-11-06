@@ -2,6 +2,10 @@
 
 中文 · [English](README.en.md)
 
+[![release](https://github.com/brick9527/freeplane-themes/actions/workflows/release.yml/badge.svg)](https://github.com/brick9527/freeplane-themes/actions/workflows/release.yml)
+[![latest release](https://img.shields.io/github/v/release/brick9527/freeplane-themes?display_name=tag&sort=semver)](https://github.com/brick9527/freeplane-themes/releases/latest)
+[![themes: CC BY 4.0](https://img.shields.io/badge/themes-CC%20BY%204.0-lightgrey)](LICENSE-CC-BY-4.0.txt)
+
 A small collection of mind-map themes (style templates) for [Freeplane](https://www.freeplane.org),
 plus the bits needed to build and check your own.
 
@@ -9,6 +13,20 @@ Freeplane 的主题就是一个普通的 `.mm` 模板文件 —— 样式全在�
 这个仓库提供几套可直接用的主题、一个结构校验脚本，以及踩坑记录。
 
 ![xmind-classic](previews/xmind-classic-demo.png)
+
+## 下载
+
+不用 clone，直接去 [Releases](https://github.com/brick9527/freeplane-themes/releases/latest) 拿包：
+
+| 拿什么 | 用在哪 |
+| --- | --- |
+| 单个 `*.mm` | 只想要某一套主题，下载后放进 `templates\` |
+| `freeplane-themes-<版本>-themes.zip` | 全部主题 + `NOTICE.txt` + 许可，扁平结构，解压后 `.mm` 直接落进 `templates\` |
+| `freeplane-themes-<版本>-full.zip` | 整个工程：主题 / 演示图 / 截图 / 文档 / 工具 / 许可 |
+| `freeplane-themes-<版本>-source.zip`、`-source.tar.gz` | 该 tag 的源码快照（含 CI 配置） |
+| `SHA256SUMS.txt` | 上面每个文件的 SHA-256，`sha256sum -c SHA256SUMS.txt` 校验 |
+
+每个包都带许可全文和署名说明：主题、演示图、截图、文档是 **CC BY 4.0**，脚本是 **GPL-2.0**。
 
 ## 安装 / 加载
 
@@ -113,9 +131,22 @@ python tools\make_demo.py .
 themes/     主题模板（.mm）
 demos/      带示例内容的演示图（.mm），双击即可看效果
 previews/   演示图的 Freeplane 真实截图（.png）
-tools/      validate_theme.py 校验 / make_demo.py 生成演示 / install_themes.ps1 安装
-docs/       style-reference.md 格式速查
+tools/      validate_theme.py 校验 / make_demo.py 生成演示 / build_release.py 打包 / install_themes.ps1 安装
+docs/       style-reference.md 格式速查、releasing.md 发版说明
+.github/    CI：validate.yml 每次提交校验、release.yml 打 tag 自动发版
 ```
+
+## 发版
+
+```bash
+git tag -a v1.0.0 -m "v1.0.0"
+git push origin v1.0.0
+```
+
+推上去就完了：CI 先校验每套主题、确认 `demos/` 与 `themes/` 同步，再打包成
+各主题独立 `.mm`、`-themes.zip`、`-full.zip`、`-source.zip` / `-source.tar.gz` 和 `SHA256SUMS.txt`，
+最后创建 Release 并写好发布正文。同一个 tag 重跑是刷新附件而不是报错。
+细节（触发条件、附件清单、回滚）见 [docs/releasing.md](docs/releasing.md)。
 
 ## 已知限制
 

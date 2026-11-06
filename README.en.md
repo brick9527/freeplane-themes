@@ -2,6 +2,10 @@
 
 [中文](README.md) · English
 
+[![release](https://github.com/brick9527/freeplane-themes/actions/workflows/release.yml/badge.svg)](https://github.com/brick9527/freeplane-themes/actions/workflows/release.yml)
+[![latest release](https://img.shields.io/github/v/release/brick9527/freeplane-themes?display_name=tag&sort=semver)](https://github.com/brick9527/freeplane-themes/releases/latest)
+[![themes: CC BY 4.0](https://img.shields.io/badge/themes-CC%20BY%204.0-lightgrey)](LICENSE-CC-BY-4.0.txt)
+
 A small collection of mind-map themes (style templates) for [Freeplane](https://www.freeplane.org),
 plus the bits needed to build and check your own.
 
@@ -10,6 +14,21 @@ code and no build step is involved. This repo ships a few ready-to-use themes, a
 validator, and the gotchas collected while writing them.
 
 ![xmind-classic](previews/xmind-classic-demo.png)
+
+## Download
+
+No need to clone — grab a package from [Releases](https://github.com/brick9527/freeplane-themes/releases/latest):
+
+| Take this | Use it for |
+| --- | --- |
+| a single `*.mm` | you only want one theme; drop it into `templates\` |
+| `freeplane-themes-<version>-themes.zip` | all themes plus `NOTICE.txt` and the licences, flat layout — extract and the `.mm` files land in `templates\` |
+| `freeplane-themes-<version>-full.zip` | the whole project: themes / demos / previews / docs / tools / licences |
+| `freeplane-themes-<version>-source.zip`, `-source.tar.gz` | source snapshot of that tag (CI config included) |
+| `SHA256SUMS.txt` | SHA-256 of every file above; verify with `sha256sum -c SHA256SUMS.txt` |
+
+Every package carries the full licence texts and the attribution notice: themes, demo maps,
+screenshots and docs are **CC BY 4.0**, the scripts are **GPL-2.0**.
 
 ## Install
 
@@ -117,9 +136,23 @@ python tools\make_demo.py .
 themes/     theme templates (.mm)
 demos/      sample maps (.mm) that already use a theme — just open them
 previews/   real Freeplane screenshots (.png)
-tools/      validate_theme.py, make_demo.py, install_themes.ps1
-docs/       style-reference.md
+tools/      validate_theme.py, make_demo.py, build_release.py, install_themes.ps1
+docs/       style-reference.md (format reference), releasing.md (how releases work)
+.github/    CI: validate.yml on every push, release.yml publishes on a tag
 ```
+
+## Releasing
+
+```bash
+git tag -a v1.0.0 -m "v1.0.0"
+git push origin v1.0.0
+```
+
+That is the whole procedure: CI validates every theme, checks that `demos/` still matches
+`themes/`, packages one `.mm` per theme plus `-themes.zip`, `-full.zip`, `-source.zip` /
+`-source.tar.gz` and `SHA256SUMS.txt`, then creates the release with generated notes.
+Re-running a tag refreshes the assets instead of failing. Details (triggers, asset list,
+rollback) are in [docs/releasing.md](docs/releasing.md).
 
 ## Known limitations
 

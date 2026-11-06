@@ -1,0 +1,158 @@
+name: release
+
+# Pushing a semver tag publishes a GitHub Release: one .mm per theme, a themes
+# bundle, the whole project, the source archives and a checksum file.
+# Non-release tags are ignored (the run stays green and publishes nothing).
+# See docs/releasing.md for the contract.
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "要发布的 tag，必须已经存在（例如 v1.0.0）"
+        required: true
+        type: string
+      publish:
+        description: "是否创建 / 更新 GitHub Release；关掉则只打包并留成 artifact"
+        required: false
+        default: true
+        type: boolean
+
+# Every job reads only; the publish job raises its own permissions.
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  build:
+    name: build packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      is_release: ${{ steps.check.outputs.is_release }}
+      tag: ${{ steps.check.outputs.tag }}
+      version: ${{ steps.check.outputs.version }}
+      prerelease: ${{ steps.check.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0 # previous tag for the changelog, and `git archive` of the tag
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Is this a release tag?
+        id: check
+        run: |
+          # `tags: "*"` fires for every tag; only semver tags become releases.
+          if python tools/build_release.py --tag "$TAG" --parse-only; then
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::$TAG is not a semver tag (want v1.2.3) - this run publishes no release"
+          fi
+
+      - name: Validate every theme
+        if: steps.check.outputs.is_release == 'true'
+        run: python tools/validate_theme.py themes/*.mm demos/*.mm
+
+      - name: Demos match their themes
+        if: steps.check.outputs.is_release == 'true'
+        run: |
+          python tools/make_demo.py .
+          if ! git diff --quiet -- demos; then
+            echo "::error file=tools/make_demo.py::demos/ is out of date - run 'python tools/make_demo.py .' and commit the result"
+            git diff --stat -- demos
+            exit 1
+          fi
+
+      - name: Build release packages
+        if: steps.check.outputs.is_release == 'true'
+        run: |
+          python tools/build_release.py \
+            --tag "$TAG" \
+            --out dist \
+            --notes release-notes.md
+
+      - name: Upload packages
+        if: steps.check.outputs.is_release == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: |
+            dist
+            release-notes.md
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Summarise the release
+        if: steps.check.outputs.is_release == 'true'
+        run: cat release-notes.md >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: publish GitHub Release
+    needs: build
+    if: >-
+      needs.build.outputs.is_release == 'true' &&
+      (github.event_name == 'push' || inputs.publish)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # create the release and upload its assets
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+          path: artifacts
+
+      - name: Create or refresh the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.build.outputs.tag }}
+          VERSION: ${{ needs.build.outputs.version }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          assets=(artifacts/dist/*.mm artifacts/dist/*.zip artifacts/dist/*.tar.gz artifacts/dist/SHA256SUMS.txt)
+          if [ ${#assets[@]} -eq 0 ]; then
+            echo "::error::no package was built - nothing to publish"
+            exit 1
+          fi
+
+          flags=()
+          if [ "$PRERELEASE" = "true" ]; then
+            flags+=(--prerelease)
+          fi
+
+          if gh release view "$TAG" --repo "$REPOSITORY" >/dev/null 2>&1; then
+            # Re-running a tag is a refresh, not an error: overwrite the assets and
+            # the notes so the release always matches the tag.
+            echo "release $TAG already exists - refreshing its assets and notes"
+            gh release upload "$TAG" "${assets[@]}" --clobber --repo "$REPOSITORY"
+            gh release edit "$TAG" \
+              --repo "$REPOSITORY" \
+              --notes-file artifacts/release-notes.md
+          else
+            gh release create "$TAG" "${assets[@]}" \
+              --repo "$REPOSITORY" \
+              --title "Freeplane 主题 $VERSION" \
+              --notes-file artifacts/release-notes.md \
+              --verify-tag \
+              "${flags[@]}"
+          fi
+
+          gh release view "$TAG" --repo "$REPOSITORY" --json url,assets \
+            --jq '"release: " + .url + "\n" + (.assets[] | "  asset: " + .name)' >> "$GITHUB_STEP_SUMMARY"
