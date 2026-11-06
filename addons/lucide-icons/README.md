@@ -39,11 +39,20 @@ python tools\build_icon_addon.py --version 0.1.0 --out dist
 - **改描述文案**：直接改 `addon.json`，`{icon_count}`、`{category_count}`、`{lucide_commit}`
   会在打包时替换成真实数字。许可文案不在 `addon.json` 里，改 `LICENSE-lucide.txt`。
 
-### 路径数据会被规整，这是必须的
+### 打包时会改写 svg 的两个地方（都是必须的）
 
-打包时会把每个 `d` 属性重新序列化成全分隔写法（`M 19 10 h 1 a 2 2 0 0 1 2 2 v 1`）。
-原因：Freeplane 的 kitfox 渲染器解析不了 Lucide 的紧凑弧语法（`a2 2 0 012 2v1` 把两个
-flag 粘在数字里），会抛 `Unexpected element while parsing cmd 'a'`，并在启动建菜单时
-崩掉整个菜单。几何不变，只是写法；自检会逐段复算确认已经规整。
+Freeplane 的 kitfox 渲染器（svgSalamander 1.1.4）有两个限制，不改就画不出来：
+
+1. **路径不能紧凑写**：`a2 2 0 012 2v1` 把 arc 的两个 flag 粘在数字里，kitfox 抛
+   `Unexpected element while parsing cmd 'a'`，启动建菜单时崩。→ 重写成
+   `a 2 2 0 0 1 2 2`，全分隔，几何不变。
+2. **样式不能只写在根节点**：Lucide 的 `fill="none"` / `stroke="currentColor"` /
+   `stroke-width="2"` 都在根 `<svg>` 上，kitfox 不继承，还把 `currentColor` 当文件路径去
+   加载 —— 结果**一个像素都不画**，图标看起来是透明的。→ 把这几条属性内联到每个
+   `path` / `circle` 上，颜色写死成 `--color`（默认 `#000000`）。
+
+自检会检查这两条：路径必须是规整形式、文件里不能有 `currentColor`、每个 shape 必须自带
+`stroke`。改完这两处后，2029 个图标用 Freeplane 自带的 svgSalamander 逐个渲染验证过，
+空白 0、报错 0。
 
 细节和踩过的坑见仓库的 [docs/icons.md](../../docs/icons.md)。

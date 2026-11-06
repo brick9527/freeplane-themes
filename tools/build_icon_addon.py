@@ -36,6 +36,7 @@ import json
 import re
 import sys
 import urllib.request
+import xml.etree.ElementTree as ElementTree
 import zipfile
 from pathlib import Path
 
@@ -178,6 +179,13 @@ PATH_COMMANDS = set("MmLlHhVvCcSsQqTtAaZz")
 PATH_NUMBER = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?")
 PATH_ATTRIBUTE = re.compile(r'( d=")([^"]*)(")')
 
+# kitfox only paints a shape when the fill/stroke attributes are on the shape
+# itself, so Lucide's root-level presentation attributes are copied down.
+PRESENTATION = ("fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin")
+SHAPE_TAGS = {"path", "circle", "ellipse", "rect", "line", "polyline", "polygon"}
+SVG_NAMESPACE = "http://www.w3.org/2000/svg"
+DEFAULT_COLOR = "#000000"
+
 
 def path_tokens(data: str) -> list[tuple[str, str]]:
     """Split path data into ("cmd", letter) and ("num", text) tokens.
@@ -252,26 +260,58 @@ def normalize_path_data(data: str) -> str:
     return " ".join(groups)
 
 
-def sanitize_svg(data: bytes) -> tuple[bytes, bool]:
-    """Normalise every path 'd' attribute; returns (bytes, whether anything changed)."""
+def sanitize_svg(data: bytes, color: str = DEFAULT_COLOR) -> tuple[bytes, bool]:
+    """Make an svg renderable by kitfox; returns (bytes, whether anything changed).
+
+    Two things have to change, both verified by rendering with the very
+    svgSalamander build Freeplane 1.13 ships:
+
+    * path data is re-serialised (see above);
+    * the presentation attributes have to sit on every shape element. Lucide puts
+      them once on the root <svg> (fill=none, stroke=currentColor, stroke-width=2)
+      and kitfox neither inherits them nor understands ``currentColor`` - it tries
+      to resolve it as a URL and draws nothing, so the icons look transparent.
+
+    The root attributes are kept (harmless) but ``currentColor`` is replaced by a
+    concrete colour, otherwise every render logs a FileNotFoundException.
+    """
     text = data.decode("utf-8")
-    changed = False
 
     def rewrite(match: re.Match[str]) -> str:
-        nonlocal changed
         original = match.group(2)
         if not original.strip():
             return match.group(0)
-        normal = normalize_path_data(original)
-        if normal != original:
-            changed = True
-        return match.group(1) + normal + match.group(3)
+        return match.group(1) + normalize_path_data(original) + match.group(3)
 
-    new_text = PATH_ATTRIBUTE.sub(rewrite, text)
-    return (new_text.encode("utf-8"), changed) if changed else (data, False)
+    text = PATH_ATTRIBUTE.sub(rewrite, text)
+
+    root = ElementTree.fromstring(text)
+    for element in root.iter():
+        for key, value in list(element.attrib.items()):
+            if "currentColor" in value:
+                element.set(key, value.replace("currentColor", color))
+
+    inherited = {key: value for key, value in root.attrib.items() if key in PRESENTATION}
+    inherited.setdefault("stroke", color)
+    inherited.setdefault("stroke-width", "2")
+    for element in root.iter():
+        if element is root:
+            continue
+        if element.tag.split("}")[-1] not in SHAPE_TAGS:
+            continue
+        for key, value in inherited.items():
+            if key not in element.attrib:
+                element.set(key, value)
+
+    ElementTree.register_namespace("", SVG_NAMESPACE)
+    body = ElementTree.tostring(root, encoding="unicode")
+    cleaned = ('<?xml version="1.0" encoding="UTF-8"?>\n' + body + "\n").encode("utf-8")
+    return cleaned, cleaned != data
 
 
-def collect_icons(sources: Path) -> tuple[dict[str, list[str]], dict[str, bytes], list[str], int]:
+def collect_icons(
+    sources: Path, color: str = DEFAULT_COLOR
+) -> tuple[dict[str, list[str]], dict[str, bytes], list[str], int]:
     """Return (category -> icon names, zip entries, warnings, paths normalised).
 
     Lucide metadata lets one icon inherit the categories of another via
@@ -322,7 +362,7 @@ def collect_icons(sources: Path) -> tuple[dict[str, list[str]], dict[str, bytes]
                 warnings.append(f"{svg.name}: no known category, filed under {MISC_CATEGORY}")
                 category = MISC_CATEGORY
         destination = f"icons/lucide/{category}/{svg.name}"
-        cleaned, touched = sanitize_svg(svg.read_bytes())
+        cleaned, touched = sanitize_svg(svg.read_bytes(), color)
         sanitized += 1 if touched else 0
         entries[destination] = cleaned
         groups[category].append(svg.stem)
@@ -455,6 +495,7 @@ def build_addon(
     cache_dir: Path | None = None,
     local_archive: Path | None = None,
     categories: list[str] | None = None,
+    color: str = DEFAULT_COLOR,
 ) -> Path:
     meta = load_meta(root)
     sources = ensure_sources(
@@ -463,7 +504,7 @@ def build_addon(
         cache_dir=cache_dir or root / DEFAULT_CACHE,
         local_archive=local_archive,
     )
-    groups, entries, warnings, sanitized = collect_icons(sources)
+    groups, entries, warnings, sanitized = collect_icons(sources, color)
     if not entries:
         raise BuildError(f"no icon found under {sources / 'icons'}")
 
@@ -498,6 +539,7 @@ def build_addon(
     print(f"lucide    : {meta['lucide']['commit'][:12]}  ({len(list((sources / 'icons').glob('*.svg')))} svgs)")
     print(f"icons     : {len(entries)} in {len(groups)} groups")
     print(f"paths     : {sanitized} svgs re-serialised so kitfox can parse them")
+    print(f"colour    : {color} (inlined on every shape, currentColor removed)")
     for category, icons in groups.items():
         print(f"  {category:<20} {len(icons):>4}")
     for warning in warnings[:10]:
@@ -525,8 +567,6 @@ REQUIRED_CHILDREN = (
 
 
 def check(addon_path: Path) -> int:
-    import xml.etree.ElementTree as ElementTree
-
     problems: list[str] = []
 
     def fail(message: str) -> None:
@@ -612,6 +652,16 @@ def check(addon_path: Path) -> int:
                         if match.group(2).strip() and normalize_path_data(match.group(2)) != match.group(2):
                             fail(f"{name}: path data not normalised for kitfox: {match.group(2)[:60]}")
                             break
+                    # kitfox does not inherit presentation attributes and cannot
+                    # resolve currentColor: it draws nothing at all.
+                    text = data.decode("utf-8")
+                    if "currentColor" in text:
+                        fail(f"{name}: still uses currentColor, kitfox renders nothing")
+                    for element in ElementTree.fromstring(data).iter():
+                        tag = element.tag.split("}")[-1]
+                        if tag in SHAPE_TAGS and "stroke" not in element.attrib:
+                            fail(f"{name}: <{tag}> has no stroke of its own")
+                            break
         except zipfile.BadZipFile as error:
             fail(f"zip payload does not open: {error}")
         except ElementTree.ParseError as error:
@@ -665,6 +715,12 @@ def main(argv: list[str]) -> int:
         help="comma separated Lucide categories to keep (default: all), e.g. arrows,files,security",
     )
     parser.add_argument("--check-only", default=None, help="only validate an existing .addon.mm")
+    parser.add_argument(
+        "--color",
+        default=DEFAULT_COLOR,
+        help=f"stroke colour written into every icon (default: {DEFAULT_COLOR}); "
+        "use e.g. '#ffffff' for a build aimed at dark themes",
+    )
     options = parser.parse_args(argv[1:])
 
     if options.check_only:
@@ -686,6 +742,7 @@ def main(argv: list[str]) -> int:
         cache_dir=Path(options.cache) if options.cache else None,
         local_archive=Path(options.lucide_archive) if options.lucide_archive else None,
         categories=options.categories.split(",") if options.categories else None,
+        color=options.color,
     )
     return check(target)
 

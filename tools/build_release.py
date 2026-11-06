@@ -333,8 +333,9 @@ def release_notes(
     lines.append("安装器读的是「当前打开那张导图」根节点上的 name / version / author / freeplaneVersionFrom，")
     lines.append("所以要先把这个 `.addon.mm` 当普通导图打开，它不会自己弹文件选择框。")
     lines.append(
-        "包内 svg 的路径数据已重写成 kitfox 能解析的全分隔形式（几何不变）："
-        "Freeplane 的 SVG 渲染器读不了 Lucide 的紧凑弧写法，会在启动建菜单时抛异常。"
+        "包内 svg 已按 Freeplane 的 kitfox 渲染器改写两处：路径数据全分隔（几何不变）、"
+        "描边/填充属性内联到每个图形并写死颜色（kitfox 不继承根节点样式、也不认 currentColor，"
+        "否则图标会显示成透明）。默认黑色，适合浅色主题。"
     )
     lines.append("")
     lines.append("图标名就是「lucide/分类/文件名」，样式或节点上写 `<icon BUILTIN=\"lucide/notifications/check\"/>`。")

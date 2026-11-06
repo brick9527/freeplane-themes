@@ -101,12 +101,23 @@ add-on 把 [Lucide](https://lucide.dev) 全套图标装进那个目录。**
 
 ### 为什么包里的 svg 和 Lucide 原文件不完全一样
 
-Freeplane 用 kitfox 渲染 SVG，它读不了 Lucide 的**紧凑弧语法**——`M19 10h1a2 2 0 012 2v1`
-里 arc 的两个 flag（`0` 和 `1`）是粘在数字串里的，kitfox 会抛
-`Unexpected element while parsing cmd 'a'`，这个异常在启动建菜单时会连带把菜单构建搞崩。
-所以打包时会把每段路径的 `d` 重新序列化成 `M 19 10 h 1 a 2 2 0 0 1 2 2 v 1` 这种全分隔写法：
-**几何完全不变**，只是写法。2029 个图标里有 1955 个需要这一步（凡是用弧线画圆的地方）。
-自检会逐段复算，确认已经规整过才放行。
+Freeplane 用 kitfox（svgSalamander 1.1.4）渲染 SVG，它有两个毛病，所以打包时会改写两份东西：
+
+| 问题 | Lucide 原文件 | kitfox 的反应 | 包里的写法 |
+| --- | --- | --- | --- |
+| 紧凑弧语法 | `d="M19 10h1a2 2 0 012 2v1"`（两个 flag 粘在数字里） | 抛 `Unexpected element while parsing cmd 'a'`，启动建菜单时把菜单构建带崩 | `d="M 19 10 h 1 a 2 2 0 0 1 2 2 v 1"`，全分隔 |
+| 样式只写在根节点 | `fill="none"` / `stroke="currentColor"` / `stroke-width="2"` 全在根 `<svg>` 上 | 不继承这些属性，还把 `currentColor` 当文件路径去加载 → **什么也不画**，图标看着是透明的 | 每条 `path` / `circle` 上各自内联 `fill` / `stroke` / `stroke-width` / `stroke-linecap` / `stroke-linejoin`，颜色写死 |
+
+几何一点没变，2029 个图标里有 1955 个需要规整路径、2029 个都需要内联样式。
+自检会逐段复算路径，并拒绝任何还带 `currentColor` 或某个 shape 没有 `stroke` 的文件。
+
+默认写成黑色（`#000000`），适合浅色主题。给深色主题用可以重打一份白色的：
+
+```powershell
+python tools\build_icon_addon.py --version 0.1.0 --out dist --color "#ffffff"
+```
+
+注意这会覆盖同名的产物文件，想同时留两份就把 `--out` 换到别的目录再改名。
 
 ## 自己改 / 重建
 
