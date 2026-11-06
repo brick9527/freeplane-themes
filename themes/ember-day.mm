@@ -56,7 +56,7 @@
 </stylenode>
 </stylenode>
 <stylenode LOCALIZED_TEXT="styles.AutomaticLayout" POSITION="right">
-<stylenode LOCALIZED_TEXT="AutomaticLayout.level.root" COLOR="#1e293b" BACKGROUND_COLOR="#eef2ff" STYLE="bubble" SHAPE_HORIZONTAL_MARGIN="16 pt" SHAPE_VERTICAL_MARGIN="10 pt" BORDER_WIDTH_LIKE_EDGE="false" BORDER_WIDTH="1 px" BORDER_COLOR_LIKE_EDGE="false" BORDER_COLOR="#c7d2fe" BORDER_DASH_LIKE_EDGE="false" BORDER_DASH="SOLID">
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level.root" COLOR="#1e293b" BACKGROUND_COLOR="#eef2ff" STYLE="bubble" SHAPE_HORIZONTAL_MARGIN="16 pt" SHAPE_VERTICAL_MARGIN="10 pt" ICON_SIZE="18 pt" BORDER_WIDTH_LIKE_EDGE="false" BORDER_WIDTH="1 px" BORDER_COLOR_LIKE_EDGE="false" BORDER_COLOR="#c7d2fe" BORDER_DASH_LIKE_EDGE="false" BORDER_DASH="SOLID">
 <font NAME="SansSerif" SIZE="20" BOLD="true"/>
 </stylenode>
 <stylenode LOCALIZED_TEXT="AutomaticLayout.level,1" COLOR="#3b5bdb">

@@ -216,6 +216,9 @@ styles.root_node
 2. **看字号和图标尺寸**：`BESIDE_NODES` 是「顶端对齐」，不是垂直居中。某个层级的字号明显大于
    样式里的 `ICON_SIZE` 时（例如根节点 22 pt 配 14 pt 图标），图标会被顶到文字行顶部，看起来就像
    「跑到左上角」。给该层级单独写一个更大的 `ICON_SIZE`，或把字号调小，就能压回视觉中线。
+   本仓库四套主题已经按这个规律分层设了 `ICON_SIZE`：根节点 20 pt（xmind-zen / ember 系是 18 pt，
+   对应它们的 20 pt 字号）、`AutomaticLayout.level,1` 在 xmind-classic 里是 15 pt（那层字号 16 pt），
+   其余层级沿用 `default` 的 `14 pt`。自己改字号时顺手把同一层的 `ICON_SIZE` 改到跟字号相近即可。
 3. **看是不是带形状（`STYLE="bubble"`）的节点**：形状节点有 `SHAPE_VERTICAL_MARGIN`，文字在色块里居中，
    图标仍按标签行顶对齐，叠加起来更容易显得"浮"在左上角。对这类节点，要么调 `ICON_SIZE`，
    要么把这一层换成不带 `STYLE="bubble"` 的样式。
