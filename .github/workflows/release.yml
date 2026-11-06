@@ -52,14 +52,9 @@ jobs:
           python-version: "3.12"
 
       # the icon add-on is built from the Lucide commit pinned in
-      # addons/lucide-icons/addon.json; cache it so later runs skip the download
-      - name: Cache Lucide sources
-        if: steps.check.outputs.is_release == 'true'
-        uses: actions/cache@v4
-        with:
-          path: .cache/lucide
-          key: lucide-${{ hashFiles('addons/lucide-icons/addon.json') }}
-
+      # addons/lucide-icons/addon.json; cache it so later runs skip the download.
+      # This has to come after the `check` step: its `if` reads steps.check, and a
+      # step cannot see the outputs of a step that has not run yet.
       - name: Is this a release tag?
         id: check
         run: |
@@ -70,6 +65,13 @@ jobs:
             echo "is_release=false" >> "$GITHUB_OUTPUT"
             echo "::notice::$TAG is not a semver tag (want v1.2.3) - this run publishes no release"
           fi
+
+      - name: Cache Lucide sources
+        if: steps.check.outputs.is_release == 'true'
+        uses: actions/cache@v4
+        with:
+          path: .cache/lucide
+          key: lucide-${{ hashFiles('addons/lucide-icons/addon.json') }}
 
       - name: Validate every theme
         if: steps.check.outputs.is_release == 'true'
@@ -135,6 +137,8 @@ jobs:
           set -euo pipefail
           shopt -s nullglob
 
+          # `*.mm` covers both the theme maps and the icon add-on
+          # (lucide-icons-<version>.addon.mm)
           assets=(artifacts/dist/*.mm artifacts/dist/*.zip artifacts/dist/*.tar.gz artifacts/dist/SHA256SUMS.txt)
           if [ ${#assets[@]} -eq 0 ]; then
             echo "::error::no package was built - nothing to publish"
