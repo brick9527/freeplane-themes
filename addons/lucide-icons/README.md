@@ -5,8 +5,8 @@ Lucide 图标的 Freeplane add-on 源集。这个目录里**没有图标文件**
 
 | 文件 | 作用 |
 | --- | --- |
-| `addon.json` | add-on 元数据：技术名（`lucide-icons`）、界面标题（`Lucide Icons` / `Lucide 图标`）、版本下限、描述与许可文案模板，以及 pin 住的 Lucide 提交 |
-| `LICENSE-lucide.txt` | Lucide 的许可全文（ISC + 源自 Feather 的 MIT 部分），原样拷贝，随包分发 |
+| `addon.json` | add-on 元数据：技术名（`lucide-icons`）、界面标题（`Lucide Icons` / `Lucide 图标`）、版本下限、描述模板，以及 pin 住的 Lucide 提交 |
+| `LICENSE-lucide.txt` | Lucide 的许可全文（ISC + 源自 Feather 的 MIT 部分），原样拷贝；打包时**整篇**写进产物的 `license` 节点，所以只下载 `.addon.mm` 的人也拿得到全文 |
 
 ## 打包
 
@@ -20,7 +20,7 @@ python tools\build_icon_addon.py --version 0.1.0 --out dist
 根节点（属性 name / version / author / freeplaneVersionFrom）
 ├── description     一个子节点，文本是 addon.json 里 description 模板展开后的说明
 ├── changes         v<version> 的变更条目
-├── license         一个子节点，许可说明
+├── license         一个子节点，Lucide 许可全文（原样取自 LICENSE-lucide.txt）
 ├── preferences.xml 空
 ├── default.properties 空
 ├── translations    en / zh_CN，各带 addons.${name}
@@ -36,7 +36,7 @@ python tools\build_icon_addon.py --version 0.1.0 --out dist
 - **换图标集版本**：改 `addon.json` 里的 `lucide.commit`。`archive` 里的 `{commit}` 会自动替换，
   分类、图标数、许可都跟着新版本走。
 - **只打一部分图标**：构建时加 `--categories notifications,files,arrows`。
-- **改描述/许可文案**：直接改 `addon.json`，`{icon_count}`、`{category_count}`、`{lucide_commit}`
-  会在打包时替换成真实数字。
+- **改描述文案**：直接改 `addon.json`，`{icon_count}`、`{category_count}`、`{lucide_commit}`
+  会在打包时替换成真实数字。许可文案不在 `addon.json` 里，改 `LICENSE-lucide.txt`。
 
 细节和踩过的坑见仓库的 [docs/icons.md](../../docs/icons.md)。

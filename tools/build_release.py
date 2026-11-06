@@ -150,6 +150,8 @@ Copyright (c) 2026 brick9527
 本包内的主题（*.mm）、演示图、截图与文档按 CC BY 4.0 授权，也可选择按 GPL-2.0 使用。
 再分发时请保留上面的仓库地址与本署名，并注明是否做过修改。许可全文见
 LICENSE-CC-BY-4.0.txt；脚本与 CI 配置按 GPL-2.0 授权，全文见 LICENSE。
+图标 add-on 里的图标来自 Lucide，按 ISC 授权（部分源自 Feather 的按 MIT），
+许可全文见 addons\\lucide-icons\\LICENSE-lucide.txt，也已整篇写进 .addon.mm。
 
 安装：把 .mm 放进 Freeplane 用户目录下的 templates\\ 文件夹
 （工具 → 打开用户目录），再用「文件 → 从模板新建导图…」并选择「用户模板 (*.mm)」。
@@ -159,7 +161,9 @@ directory (Tools -> Open user directory), then File -> New map from template...
 and pick "User templates (*.mm)".
 
 Themes, demo maps, screenshots and docs are CC BY 4.0 (or GPL-2.0 at your
-option); the scripts are GPL-2.0.
+option); the scripts are GPL-2.0. The icons in the add-on come from Lucide and
+are ISC licensed (Feather-derived ones MIT); the full licence text sits in the
+add-on's own license node, so the single .addon.mm file carries it too.
 """
 
 
@@ -369,6 +373,10 @@ def release_notes(
     lines.append(
         "图标 add-on 里的图标来自 Lucide，按 **ISC** 授权（部分源自 Feather 的按 MIT），"
         "见 `addons/lucide-icons/LICENSE-lucide.txt`；打包脚本同样是 GPL-2.0。"
+    )
+    lines.append(
+        "许可全文已整篇写进 `.addon.mm` 的 `license` 节点（安装时的许可确认框就是它），"
+        "所以只下载这一个文件也带着完整许可。"
     )
     lines.append("")
     if prerelease:

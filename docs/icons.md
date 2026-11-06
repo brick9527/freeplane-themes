@@ -47,7 +47,7 @@ add-on 把 [Lucide](https://lucide.dev) 全套图标装进那个目录。**
 | 图标名 | `lucide/<分类>/<名>`，如 `lucide/files/folder` |
 | Lucide 版本 | 固定提交 `b826f0c5`（2026-11-05） |
 | 需要 | Freeplane ≥ 1.11（`freeplaneVersionFrom`） |
-| 许可 | Lucide 的 ISC；其中源自 Feather 的图标是 MIT |
+| 许可 | Lucide 的 ISC；其中源自 Feather 的图标是 MIT。全文**整篇写进包里**（安装时那个许可确认框显示的就是全文），仓库里另有一份 `addons/lucide-icons/LICENSE-lucide.txt` |
 
 安装：
 
@@ -115,7 +115,8 @@ python tools\build_icon_addon.py --version 0.1.0 --out dist --lucide-archive luc
 python tools\build_icon_addon.py --check-only dist\lucide-icons-0.1.0.addon.mm
 ```
 
-- 图标源、分组、许可文案都来自 `addons/lucide-icons/addon.json`；脚本 `tools/build_icon_addon.py` 只管打包。
+- 图标源、分组、描述文案来自 `addons/lucide-icons/addon.json`，许可文案来自同目录的
+  `LICENSE-lucide.txt`（打包时整篇写进 `license` 节点）；脚本 `tools/build_icon_addon.py` 只管打包。
 - 换 Lucide 版本：改 `addon.json` 里的 `lucide.commit`（`archive` 里的 `{commit}` 会自动替换），重跑一遍。
   分类跟着 Lucide 走，图标增减也是自动的。
 - 打包脚本会做一遍**模拟安装器的自检**：根属性齐全、8 个必备子节点各一份、`description`/`license`

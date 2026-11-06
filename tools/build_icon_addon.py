@@ -74,6 +74,22 @@ def load_meta(root: Path) -> dict:
         raise BuildError(f"{path} is not valid JSON: {error}")
 
 
+def read_license(root: Path) -> str:
+    """The verbatim Lucide licence - ISC asks for it to appear in *all* copies.
+
+    It is shipped inside the .addon.mm (the installer shows it in the licence
+    dialog), so a download of that single file still carries the full text.
+    """
+    path = root / ADDON_DIR / "LICENSE-lucide.txt"
+    try:
+        text = path.read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        raise BuildError(f"{path} is missing")
+    if "ISC License" not in text:
+        raise BuildError(f"{path} does not look like the Lucide licence")
+    return text
+
+
 def source_dir(root: Path, meta: dict, cache_dir: Path) -> Path:
     return cache_dir / meta["lucide"]["commit"]
 
@@ -240,6 +256,7 @@ def render_map(
     payload: bytes,
     entries: dict[str, bytes],
     groups: dict[str, list[str]],
+    license_text: str,
 ) -> str:
     addon_name = meta["name"]
     titles = meta["title"]
@@ -252,7 +269,11 @@ def render_map(
         category_count=category_count,
         lucide_commit=meta["lucide"]["commit"][:12],
     ).strip()
-    license_text = (meta["license_text"]).strip()
+    # verbatim licence, so the file that users download carries the whole notice
+    licence_node = (
+        f"图标来自 Lucide（https://lucide.dev），完整许可如下；"
+        f"本仓库的打包脚本另按 GPL-2.0-only 授权。\n\n{license_text}"
+    )
 
     lines: list[str] = []
     add = lines.append
@@ -285,7 +306,7 @@ def render_map(
     add("  </node>")
 
     add('  <node TEXT="license" FOLDED="true" POSITION="left">')
-    add(f'    <node TEXT="{xml_attr(license_text)}"/>')
+    add(f'    <node TEXT="{xml_attr(licence_node)}"/>')
     add("  </node>")
 
     # leaf nodes: empty preferences / properties / scripts are all accepted
@@ -352,7 +373,14 @@ def build_addon(
             raise BuildError("--categories filtered out every icon")
 
     payload = make_zip(entries)
-    document = render_map(version=version, meta=meta, payload=payload, entries=entries, groups=groups)
+    document = render_map(
+        version=version,
+        meta=meta,
+        payload=payload,
+        entries=entries,
+        groups=groups,
+        license_text=read_license(root),
+    )
 
     out.mkdir(parents=True, exist_ok=True)
     target = out / f"{meta['name']}-{version}.addon.mm"
