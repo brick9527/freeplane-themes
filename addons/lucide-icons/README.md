@@ -39,4 +39,11 @@ python tools\build_icon_addon.py --version 0.1.0 --out dist
 - **改描述文案**：直接改 `addon.json`，`{icon_count}`、`{category_count}`、`{lucide_commit}`
   会在打包时替换成真实数字。许可文案不在 `addon.json` 里，改 `LICENSE-lucide.txt`。
 
+### 路径数据会被规整，这是必须的
+
+打包时会把每个 `d` 属性重新序列化成全分隔写法（`M 19 10 h 1 a 2 2 0 0 1 2 2 v 1`）。
+原因：Freeplane 的 kitfox 渲染器解析不了 Lucide 的紧凑弧语法（`a2 2 0 012 2v1` 把两个
+flag 粘在数字里），会抛 `Unexpected element while parsing cmd 'a'`，并在启动建菜单时
+崩掉整个菜单。几何不变，只是写法；自检会逐段复算确认已经规整。
+
 细节和踩过的坑见仓库的 [docs/icons.md](../../docs/icons.md)。

@@ -166,11 +166,117 @@ def ensure_sources(
     return directory
 
 
-def collect_icons(sources: Path) -> tuple[dict[str, list[str]], dict[str, bytes], list[str]]:
-    """Return (category -> icon names, zip entries, warnings).
+# --------------------------------------------------------------------------- #
+# SVG path data - kitfox, the renderer inside Freeplane, cannot read the compact
+# arc syntax Lucide emits: "M19 10h1a2 2 0 012 2v1" glues the two arc flags
+# together, and kitfox throws "Unexpected element while parsing cmd 'a' ... rest=v1"
+# which aborts menu construction on startup. Every path is re-serialised with a
+# space between each token - the same geometry, a form kitfox can parse.
+# --------------------------------------------------------------------------- #
+ARITY = {"M": 2, "L": 2, "H": 1, "V": 1, "C": 6, "S": 4, "Q": 4, "T": 2, "A": 7, "Z": 0}
+PATH_COMMANDS = set("MmLlHhVvCcSsQqTtAaZz")
+PATH_NUMBER = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?")
+PATH_ATTRIBUTE = re.compile(r'( d=")([^"]*)(")')
+
+
+def path_tokens(data: str) -> list[tuple[str, str]]:
+    """Split path data into ("cmd", letter) and ("num", text) tokens.
+
+    Arc flags are single digits and Lucide writes them glued to the previous
+    number ("012"), so inside an arc they are consumed one character at a time.
+    """
+    tokens: list[tuple[str, str]] = []
+    index, limit = 0, len(data)
+    command = ""
+    position = 0  # parameters read in the current group
+    while index < limit:
+        char = data[index]
+        if char in " \t\r\n,":
+            index += 1
+            continue
+        if char in PATH_COMMANDS:
+            command, position = char, 0
+            tokens.append(("cmd", char))
+            index += 1
+            continue
+        if not command:
+            raise ValueError(f"path data starts with a number: {data[:24]!r}")
+        arity = ARITY[command.upper()]
+        if arity == 0:
+            raise ValueError(f"stray parameter after {command!r}: {data[:24]!r}")
+        if command.upper() == "A" and position in (3, 4):
+            if char not in "01":
+                raise ValueError(f"arc flag must be 0 or 1, got {char!r} in {data!r}")
+            tokens.append(("num", char))
+            position = (position + 1) % arity
+            index += 1
+            continue
+        match = PATH_NUMBER.match(data, index)
+        if not match:
+            raise ValueError(f"bad number at {index} in {data!r}")
+        tokens.append(("num", match.group(0)))
+        position = (position + 1) % arity
+        index = match.end()
+    return tokens
+
+
+def normalize_path_data(data: str) -> str:
+    """Re-emit path data with one command+parameters group per letter, space separated."""
+    tokens = path_tokens(data)
+    groups: list[str] = []
+    command = ""
+    buffer: list[str] = []
+
+    def flush(next_index: int = 0) -> None:
+        if not command:
+            return
+        arity = ARITY[command.upper()]
+        if arity == 0:
+            groups.append(command)
+            return
+        for offset in range(0, len(buffer), arity):
+            group = buffer[offset : offset + arity]
+            letter = command
+            if command in "Mm" and offset > 0:
+                letter = "l" if command == "m" else "L"  # extra pairs mean lineto
+            groups.append(" ".join([letter, *group]))
+
+    for kind, text in tokens:
+        if kind == "cmd":
+            flush()
+            command = text
+            buffer = []
+        else:
+            buffer.append(text)
+    flush()
+    return " ".join(groups)
+
+
+def sanitize_svg(data: bytes) -> tuple[bytes, bool]:
+    """Normalise every path 'd' attribute; returns (bytes, whether anything changed)."""
+    text = data.decode("utf-8")
+    changed = False
+
+    def rewrite(match: re.Match[str]) -> str:
+        nonlocal changed
+        original = match.group(2)
+        if not original.strip():
+            return match.group(0)
+        normal = normalize_path_data(original)
+        if normal != original:
+            changed = True
+        return match.group(1) + normal + match.group(3)
+
+    new_text = PATH_ATTRIBUTE.sub(rewrite, text)
+    return (new_text.encode("utf-8"), changed) if changed else (data, False)
+
+
+def collect_icons(sources: Path) -> tuple[dict[str, list[str]], dict[str, bytes], list[str], int]:
+    """Return (category -> icon names, zip entries, warnings, paths normalised).
 
     Lucide metadata lets one icon inherit the categories of another via
     ``"$extends:<icon>"``; those have to be resolved before an icon can be filed.
+    Every svg also gets its path data normalised for the kitfox renderer.
     """
     category_files = sorted((sources / "categories").glob("*.json"))
     known = {path.stem for path in category_files}
@@ -202,6 +308,7 @@ def collect_icons(sources: Path) -> tuple[dict[str, list[str]], dict[str, bytes]
     groups: dict[str, list[str]] = {name: [] for name in sorted(known)}
     groups[MISC_CATEGORY] = []
     warnings: list[str] = []
+    sanitized = 0
 
     for svg in sorted(icons_dir.glob("*.svg")):
         if svg.stem not in declared:
@@ -215,11 +322,13 @@ def collect_icons(sources: Path) -> tuple[dict[str, list[str]], dict[str, bytes]
                 warnings.append(f"{svg.name}: no known category, filed under {MISC_CATEGORY}")
                 category = MISC_CATEGORY
         destination = f"icons/lucide/{category}/{svg.name}"
-        entries[destination] = svg.read_bytes()
+        cleaned, touched = sanitize_svg(svg.read_bytes())
+        sanitized += 1 if touched else 0
+        entries[destination] = cleaned
         groups[category].append(svg.stem)
 
     groups = {name: icons for name, icons in groups.items() if icons}
-    return groups, entries, warnings
+    return groups, entries, warnings, sanitized
 
 
 def make_zip(entries: dict[str, bytes]) -> bytes:
@@ -354,7 +463,7 @@ def build_addon(
         cache_dir=cache_dir or root / DEFAULT_CACHE,
         local_archive=local_archive,
     )
-    groups, entries, warnings = collect_icons(sources)
+    groups, entries, warnings, sanitized = collect_icons(sources)
     if not entries:
         raise BuildError(f"no icon found under {sources / 'icons'}")
 
@@ -388,6 +497,7 @@ def build_addon(
 
     print(f"lucide    : {meta['lucide']['commit'][:12]}  ({len(list((sources / 'icons').glob('*.svg')))} svgs)")
     print(f"icons     : {len(entries)} in {len(groups)} groups")
+    print(f"paths     : {sanitized} svgs re-serialised so kitfox can parse them")
     for category, icons in groups.items():
         print(f"  {category:<20} {len(icons):>4}")
     for warning in warnings[:10]:
@@ -493,7 +603,15 @@ def check(addon_path: Path) -> int:
                         fail(f"{name}: unexpected install path")
                     if not name.endswith(".svg"):
                         fail(f"{name}: unexpected file type")
-                    ElementTree.fromstring(bundle.read(name))
+                    data = bundle.read(name)
+                    ElementTree.fromstring(data)
+                    # Freeplane renders these with kitfox, which cannot parse
+                    # Lucide's compact arc flags - every d attribute must already
+                    # be in the re-serialised form.
+                    for match in PATH_ATTRIBUTE.finditer(data.decode("utf-8")):
+                        if match.group(2).strip() and normalize_path_data(match.group(2)) != match.group(2):
+                            fail(f"{name}: path data not normalised for kitfox: {match.group(2)[:60]}")
+                            break
         except zipfile.BadZipFile as error:
             fail(f"zip payload does not open: {error}")
         except ElementTree.ParseError as error:

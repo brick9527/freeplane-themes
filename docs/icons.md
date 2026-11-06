@@ -99,6 +99,15 @@ add-on 把 [Lucide](https://lucide.dev) 全套图标装进那个目录。**
 `lucide/` 下的子目录。注意 Lucide 会改名（老版本的 `alert-triangle` 现在叫
 `triangle-exclamation-point`），换 Lucide 版本后名字以新版为准。
 
+### 为什么包里的 svg 和 Lucide 原文件不完全一样
+
+Freeplane 用 kitfox 渲染 SVG，它读不了 Lucide 的**紧凑弧语法**——`M19 10h1a2 2 0 012 2v1`
+里 arc 的两个 flag（`0` 和 `1`）是粘在数字串里的，kitfox 会抛
+`Unexpected element while parsing cmd 'a'`，这个异常在启动建菜单时会连带把菜单构建搞崩。
+所以打包时会把每段路径的 `d` 重新序列化成 `M 19 10 h 1 a 2 2 0 0 1 2 2 v 1` 这种全分隔写法：
+**几何完全不变**，只是写法。2029 个图标里有 1955 个需要这一步（凡是用弧线画圆的地方）。
+自检会逐段复算，确认已经规整过才放行。
+
 ## 自己改 / 重建
 
 ```powershell
